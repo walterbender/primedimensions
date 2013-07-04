@@ -95,10 +95,11 @@ class Dimensions(activity.Activity):
             self._saved_state = None
         self.vmw.new_game(self._saved_state, self._deck_index)
         self.ready_to_play = True
+        '''
         if self._saved_state == None:
             # Launch animated help
             self.vmw.help_animation()
-
+        '''
         if self._editing_word_list:
             self.vmw.editing_word_list = True
             self.vmw.edit_word_list()
@@ -128,6 +129,7 @@ class Dimensions(activity.Activity):
         if card_type == 'custom' and self.vmw.custom_paths[0] is None:
             self.image_import_cb()
         else:
+            self.numbers_toolbar_button.set_expanded(False)
             self.vmw.new_game()
 
     def _robot_cb(self, button=None):
@@ -175,7 +177,7 @@ class Dimensions(activity.Activity):
             return
         self.vmw.numberO = numberO
         self.vmw.card_type = 'number'
-        self._load_new_game()
+        # self._load_new_game()
 
     def _number_card_C_cb(self, button, numberC):
         ''' Choose between C-card list for numbers game. '''
@@ -183,7 +185,7 @@ class Dimensions(activity.Activity):
             return
         self.vmw.numberC = numberC
         self.vmw.card_type = 'number'
-        self._load_new_game()
+        # self._load_new_game()
 
     def _edit_words_cb(self, button):
         ''' Edit the word list. '''
@@ -202,9 +204,9 @@ class Dimensions(activity.Activity):
 
     def _read_journal_data(self):
         ''' There may be data from a previous instance. '''
-        self._play_level = int(self._read_metadata('play_level', 2))
+        self._play_level = int(self._read_metadata('play_level', 0))
         self._robot_time = int(self._read_metadata('robot_time', 60))
-        self._card_type = self._read_metadata('cardtype', 'pattern')
+        self._card_type = self._read_metadata('cardtype', 'number')
         self._low_score = [int(self._read_metadata('low_score_beginner', -1)),
                            int(self._read_metadata('low_score_intermediate',
                                                    -1)),
@@ -263,20 +265,22 @@ class Dimensions(activity.Activity):
         self.numbers_toolbar_button = ToolbarButton(
             page=numbers_toolbar,
             icon_name='number-tools')
-        # numbers_toolbar.show()
-        # toolbox.toolbar.insert(self.numbers_toolbar_button, -1)
-        # self.numbers_toolbar_button.show()
+        numbers_toolbar.show()
+        toolbox.toolbar.insert(self.numbers_toolbar_button, -1)
+        self.numbers_toolbar_button.show()
 
+        '''
         self.tools_toolbar_button = ToolbarButton(
             page=tools_toolbar,
             icon_name='view-source')
         tools_toolbar.show()
         toolbox.toolbar.insert(self.tools_toolbar_button, -1)
         self.tools_toolbar_button.show()
+        '''
 
-        self.button_pattern = button_factory(
-            'new-pattern-game', toolbox.toolbar, self._select_game_cb,
-            cb_arg='pattern', tooltip=PROMPT_DICT['pattern'])
+        self.button_number = button_factory(
+            'new-number-game', toolbox.toolbar, self._select_game_cb,
+            cb_arg='number', tooltip=PROMPT_DICT['number'])
 
         self._set_extras(toolbox.toolbar)
 
@@ -306,9 +310,6 @@ class Dimensions(activity.Activity):
         self.button_pattern = button_factory(
             'new-pattern-game', games_toolbar, self._select_game_cb,
             cb_arg='pattern', tooltip=PROMPT_DICT['pattern'])
-        self.button_number = button_factory(
-            'new-number-game', games_toolbar, self._select_game_cb,
-            cb_arg='number', tooltip=PROMPT_DICT['number'])
         self.button_word = button_factory(
             'new-word-game', games_toolbar, self._select_game_cb,
             cb_arg='word', tooltip=PROMPT_DICT['word'])
@@ -321,7 +322,6 @@ class Dimensions(activity.Activity):
         self.words_tool_button = button_factory(
             'word-tools', tools_toolbar, self._edit_words_cb,
             tooltip=_('Edit word lists.'))
-        '''
 
         self.import_button = button_factory(
             'image-tools', tools_toolbar, self.image_import_cb,
@@ -330,8 +330,8 @@ class Dimensions(activity.Activity):
         self.button_custom = button_factory(
             'no-custom-game', tools_toolbar, self._select_game_cb,
             cb_arg='custom', tooltip=PROMPT_DICT['custom'])
-
         '''
+
         self.product_button = radio_factory(
             'product',
             numbers_toolbar,
@@ -381,7 +381,7 @@ class Dimensions(activity.Activity):
             group=self.product_button)
         NUMBER_O_BUTTONS[INCAN] = self.incan_button
 
-        separator_factory(numbers_toolbar, False, True)
+        self._sep.append(separator_factory(numbers_toolbar, False, True))
 
         self.hash_button = radio_factory(
             'hash',
@@ -423,9 +423,11 @@ class Dimensions(activity.Activity):
             tooltip=_('dots in a line'),
             group=self.hash_button)
         NUMBER_C_BUTTONS[LINES] = self.lines_button
-        '''
 
     def _configure_cb(self, event):
+        self._vbox.set_size_request(Gdk.Screen.width(), Gdk.Screen.height())
+        self._vbox.show()
+
         if Gdk.Screen.width() < Gdk.Screen.height():
             for sep in self._sep:
                 sep.hide()
@@ -498,15 +500,34 @@ class Dimensions(activity.Activity):
             group=self.beginner_button)
         LEVEL_BUTTONS[EXPERT] = self.expert_button
 
+    def _fixed_resize_cb(self, widget=None, rect=None):
+        ''' If a toolbar opens or closes, we need to resize the vbox
+        holding out scrolling window. '''
+        self._vbox.set_size_request(rect.width, rect.height)
+
     def _setup_canvas(self):
-        ''' Create a canvas.. '''
-        canvas = Gtk.DrawingArea()
-        canvas.set_size_request(Gdk.Screen.width(), Gdk.Screen.height())
-        self.set_canvas(canvas)
-        canvas.show()
+        ''' Create a canvas in a Gtk.Fixed '''
+        self.fixed = Gtk.Fixed()
+        self.fixed.connect('size-allocate', self._fixed_resize_cb)
+        self.fixed.show()
+        self.set_canvas(self.fixed)
+
+        self._vbox = Gtk.VBox(False, 0)
+        self._vbox.set_size_request(Gdk.Screen.width(), Gdk.Screen.height())
+        self.fixed.put(self._vbox, 0, 0)
+        self._vbox.show()
+
+        self._canvas = Gtk.DrawingArea()
+        self._canvas.set_size_request(int(Gdk.Screen.width()),
+                                      int(Gdk.Screen.height()))
+        self._canvas.show()
+        self.show_all()
+        self._vbox.pack_end(self._canvas, True, True, 0)
+        self._vbox.show()
+
         self.show_all()
 
-        self.vmw = Game(canvas, self)
+        self.vmw = Game(self._canvas, self)
         self.vmw.level = self._play_level
         LEVEL_BUTTONS[self._play_level].set_active(True)
         self.vmw.card_type = self._card_type
@@ -531,7 +552,7 @@ class Dimensions(activity.Activity):
                self._custom_jobject[i] is not None:
                 self.vmw.custom_paths[i] = datastore.get(
                     self._custom_jobject[i])
-        return canvas
+        return self._canvas
 
     def write_file(self, file_path):
         ''' Write data to the Journal. '''
@@ -650,9 +671,10 @@ class Dimensions(activity.Activity):
         ''' Set up a help palette for the main toolbars '''
         help_box = self._new_help_box('main-toolbar')
         add_section(help_box, _('Dimensions'), icon='activity-dimensions')
-        add_paragraph(help_box, _('Tools'), icon='view-source')
-        add_paragraph(help_box, _('Game'), icon='new-pattern-game')
-        # add_paragraph(help_box, PROMPT_DICT['number'], icon='new-number-game')
+        add_paragraph(help_box, _('Numbers'), icon='number-tools')
+        #add_paragraph(help_box, _('Tools'), icon='view-source')
+        #add_paragraph(help_box, _('Game'), icon='new-pattern-game')
+        add_paragraph(help_box, PROMPT_DICT['number'], icon='new-number-game')
         # add_paragraph(help_box, PROMPT_DICT['word'], icon='new-word-game')
         # add_paragraph(help_box, _('Numbers'), icon='number-tools')
         add_paragraph(help_box, _('Play with the computer'), icon='robot-off')
@@ -665,12 +687,11 @@ class Dimensions(activity.Activity):
         add_paragraph(help_box, _('Export scores to clipboard'),
                       icon='score-copy')
 
-        add_section(help_box, _('Tools'), icon='view-source')
-        add_section(help_box, _('Import image cards'), icon='image-tools')
-        add_paragraph(help_box, PROMPT_DICT['custom'], icon='new-custom-game')
+        # add_section(help_box, _('Tools'), icon='view-source')
+        # add_section(help_box, _('Import image cards'), icon='image-tools')
+        # add_paragraph(help_box, PROMPT_DICT['custom'], icon='new-custom-game')
         # add_section(help_box, _('Edit word lists.'), icon='word-tools')
 
-        '''
         add_section(help_box, _('Numbers'), icon='number-tools')
         add_paragraph(help_box, _('product'), icon='product')
         add_paragraph(help_box, _('Roman numerals'), icon='roman')
@@ -683,7 +704,6 @@ class Dimensions(activity.Activity):
         add_paragraph(help_box, _('points on a star'), icon='star')
         add_paragraph(help_box, _('dice'), icon='dice')
         add_paragraph(help_box, _('dots in a line'), icon='lines')
-        '''
 
     def _setup_presence_service(self):
         ''' Setup the Presence Service. '''
