@@ -4,64 +4,42 @@
 	<!ENTITY fill_color "#eee">
 ]>
 <svg height="55px" viewBox="0 0 55 55" width="55px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" stroke="&stroke_color;" fill="&fill_color;">
-  <rect
-     width="19.728365"
-     height="9.0900669"
-     x="6.4656048"
-     y="5.9336901"
-     id="rect3770-8"
-     style="fill:&fill_color;;fill-opacity:1;stroke:&fill_color;;stroke-width:6.86738014;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
-  <path
-     d="M 11.195099,16.903549 16.802535,3.5718138 20.300802,17.385633 9.4579926,8.0369522 23.201581,9.524765 z"
-     id="path3034"
-     style="fill:none;stroke:&stroke_color;;stroke-width:2.01501012;stroke-linecap:round;stroke-opacity:1" />
-  <rect
-     width="26.755812"
-     height="15.408295"
-     ry="3.4379132"
-     x="14.122094"
-     y="19.795855"
-     id="rect3770"
-     style="fill:none;stroke:&stroke_color;;stroke-width:1.61298168;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
   <g
-     transform="matrix(0.75023334,0,0,0.75023334,13.433126,-3.8162464)"
-     id="g3841"
-     style="fill:&fill_color;;fill-opacity:1;stroke:&fill_color;;stroke-width:3.33229661;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
+     transform="translate(0,0.16692916)"
+     id="g3862">
     <g
-       id="g3837"
-       style="fill:&fill_color;;fill-opacity:1;stroke:&fill_color;;stroke-width:3.33229661;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none">
+       transform="matrix(1.057745,0,0,1.057745,-1.5879875,-0.94060696)"
+       id="g3909">
+      <g
+         transform="translate(0.66155575,0)"
+         id="g3857">
+        <path
+           d="m 21.173223,39.305178 7.74236,9.159855 L 28.25943,36.666361 21.996628,46.752313 32.503663,42.16788 z"
+           id="path3034"
+           style="fill:none;stroke:&stroke_color;;stroke-width:2.90221357;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+        <path
+           d="M 4.6543645,39.305179 12.396725,48.465033 11.740571,36.666362 5.4777693,46.752314 15.984804,42.167881 z"
+           id="path3034-0"
+           style="fill:none;stroke:&stroke_color;;stroke-width:2.90221357;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+        <path
+           d="m 37.692084,39.305179 7.74236,9.159854 -0.656153,-11.798671 -6.262802,10.085952 10.507035,-4.584433 z"
+           id="path3034-5"
+           style="fill:none;stroke:&stroke_color;;stroke-width:2.90221357;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+      </g>
       <path
-         d="m 25.25,33.125 a 3.4375,3.375 0 1 1 -6.875,0 3.4375,3.375 0 1 1 6.875,0 z"
-         transform="matrix(1.0119826,0,0,1.030723,1.9261296,4.3573002)"
-         id="path3036"
-         style="fill:&fill_color;;fill-opacity:1;stroke:&fill_color;;stroke-width:3.26276755;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
-      <path
-         d="m 25.25,33.125 a 3.4375,3.375 0 1 1 -6.875,0 3.4375,3.375 0 1 1 6.875,0 z"
-         transform="matrix(1.0119826,0,0,1.030723,-8.5738705,4.3573002)"
-         id="path3036-4"
-         style="fill:&fill_color;;fill-opacity:1;stroke:&fill_color;;stroke-width:3.26276755;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+         d="m 16.5,25.000002 22,0"
+         id="path3851"
+         style="fill:none;stroke:&fill_color;;stroke-width:4.5;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+      <text
+         x="14.914062"
+         y="16.666222"
+         id="text3853"
+         xml:space="preserve"
+         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:&stroke_color;;fill-opacity:1;stroke:none;font-family:Sans"><tspan
+           x="14.914062"
+           y="16.666222"
+           id="tspan3855"
+           style="font-size:18px;font-weight:bold;-inkscape-font-specification:Sans Bold">55</tspan></text>
     </g>
-    <path
-       d="m 8.75,48.5 20,0"
-       id="path3835"
-       style="fill:&fill_color;;fill-opacity:1;stroke:&fill_color;;stroke-width:3.33229661;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
   </g>
-  <rect
-     width="19.728365"
-     height="9.0900669"
-     x="28.80603"
-     y="39.976242"
-     id="rect3770-6"
-     style="fill:&fill_color;;fill-opacity:1;stroke:&fill_color;;stroke-width:6.86738014;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
-  <text
-     x="28.077969"
-     y="48.588619"
-     transform="scale(0.94463905,1.0586054)"
-     id="text3030"
-     xml:space="preserve"
-     style="font-size:23.8940773px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;stroke:none"><tspan
-       x="28.077969"
-       y="48.588619"
-       id="tspan3032"
-       style="font-size:17.92055893px;font-style:normal;font-weight:bold;fill:&stroke_color;;fill-opacity:1;stroke:none;-inkscape-font-specification:Sans Bold">11</tspan></text>
 </svg>
