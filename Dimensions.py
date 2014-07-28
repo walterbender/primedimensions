@@ -1,4 +1,4 @@
-#Copyright (c) 2009-13 Walter Bender
+#Copyright (c) 2009-14 Walter Bender
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@ from gi.repository import Gdk
 from gi.repository import GObject
 
 from sugar3.activity import activity
-from sugar3 import profile
 from sugar3.graphics.toolbarbox import ToolbarBox
 from sugar3.activity.widgets import ActivityToolbarButton
 from sugar3.activity.widgets import StopButton
@@ -36,10 +35,8 @@ from sugar3.presence import presenceservice
 from sugar3.presence.tubeconn import TubeConnection
 
 from gettext import gettext as _
-import os.path
 import logging
 _logger = logging.getLogger('dimensions-activity')
-import json
 from json import load as jload
 from json import dump as jdump
 
@@ -53,6 +50,7 @@ from helpbutton import (HelpButton, add_section, add_paragraph, help_windows,
                         help_buttons)
 from game import Game
 
+MODE = 'numbers'
 
 help_palettes = {}
 
@@ -91,18 +89,17 @@ class Dimensions(activity.Activity):
         self._read_journal_data()
         self._sep = []
         self._setup_toolbars()
-        canvas = self._setup_canvas()
+        self._setup_canvas()
         self._setup_presence_service()
 
         if not hasattr(self, '_saved_state'):
             self._saved_state = None
         self.vmw.new_game(self._saved_state, self._deck_index)
         self.ready_to_play = True
-        '''
         if self._saved_state == None:
             # Launch animated help
             self.vmw.help_animation()
-        '''
+
         if self._editing_word_list:
             self.vmw.editing_word_list = True
             self.vmw.edit_word_list()
@@ -124,15 +121,14 @@ class Dimensions(activity.Activity):
     def _load_new_game(self, card_type=None):
         if not self.ready_to_play:
             return
-        self._notify_new_game(self._prompt)
-        # a brief pause to give alert time to load
-        timeout = GObject.timeout_add(200, self._new_game, card_type)
+        # self._notify_new_game(self._prompt)
+        GObject.idle_add(self._new_game, card_type)
 
     def _new_game(self, card_type):
         if card_type == 'custom' and self.vmw.custom_paths[0] is None:
             self.image_import_cb()
         else:
-            self.numbers_toolbar_button.set_expanded(False)
+            self.tools_toolbar_button.set_expanded(False)
             self.vmw.new_game()
 
     def _robot_cb(self, button=None):
@@ -180,7 +176,7 @@ class Dimensions(activity.Activity):
             return
         self.vmw.numberO = numberO
         self.vmw.card_type = 'number'
-        # self._load_new_game()
+        self._load_new_game()
 
     def _number_card_C_cb(self, button, numberC):
         ''' Choose between C-card list for numbers game. '''
@@ -188,7 +184,7 @@ class Dimensions(activity.Activity):
             return
         self.vmw.numberC = numberC
         self.vmw.card_type = 'number'
-        # self._load_new_game()
+        self._load_new_game()
 
     def _edit_words_cb(self, button):
         ''' Edit the word list. '''
@@ -209,7 +205,7 @@ class Dimensions(activity.Activity):
         ''' There may be data from a previous instance. '''
         self._play_level = int(self._read_metadata('play_level', 0))
         self._robot_time = int(self._read_metadata('robot_time', 60))
-        self._card_type = self._read_metadata('cardtype', 'number')
+        self._card_type = self._read_metadata('cardtype', 'pattern')
         self._low_score = [int(self._read_metadata('low_score_beginner', -1)),
                            int(self._read_metadata('low_score_intermediate',
                                                    -1)),
@@ -268,22 +264,30 @@ class Dimensions(activity.Activity):
         self.numbers_toolbar_button = ToolbarButton(
             page=numbers_toolbar,
             icon_name='number-tools')
-        numbers_toolbar.show()
-        toolbox.toolbar.insert(self.numbers_toolbar_button, -1)
-        self.numbers_toolbar_button.show()
+        if MODE == 'numbers':
+            numbers_toolbar.show()
+            toolbox.toolbar.insert(self.numbers_toolbar_button, -1)
+            self.numbers_toolbar_button.show()
 
-        '''
         self.tools_toolbar_button = ToolbarButton(
             page=tools_toolbar,
             icon_name='view-source')
         tools_toolbar.show()
         toolbox.toolbar.insert(self.tools_toolbar_button, -1)
         self.tools_toolbar_button.show()
-        '''
 
-        self.button_number = button_factory(
-            'new-number-game', toolbox.toolbar, self._select_game_cb,
-            cb_arg='number', tooltip=PROMPT_DICT['number'])
+        if MODE == 'patterns':
+            self.button_pattern = button_factory(
+                'new-pattern-game', toolbox.toolbar, self._select_game_cb,
+                cb_arg='pattern', tooltip=PROMPT_DICT['pattern'])
+        elif MODE == 'numbers':
+            self.button_number = button_factory(
+                'new-number-game', toolbox.toolbar, self._select_game_cb,
+                cb_arg='number', tooltip=PROMPT_DICT['number'])
+        else:
+            self.button_pattern = button_factory(
+                'new-word-game', toolbox.toolbar, self._select_game_cb,
+                cb_arg='word', tooltip=PROMPT_DICT['word'])
 
         self._set_extras(toolbox.toolbar)
 
@@ -309,32 +313,24 @@ class Dimensions(activity.Activity):
         self.set_toolbar_box(toolbox)
         toolbox.show()
 
-        '''
-        self.button_pattern = button_factory(
-            'new-pattern-game', games_toolbar, self._select_game_cb,
-            cb_arg='pattern', tooltip=PROMPT_DICT['pattern'])
-        self.button_word = button_factory(
-            'new-word-game', games_toolbar, self._select_game_cb,
-            cb_arg='word', tooltip=PROMPT_DICT['word'])
-        self.button_custom = button_factory(
-            'no-custom-game', games_toolbar, self._select_game_cb,
-            cb_arg='custom', tooltip=PROMPT_DICT['custom'])
-
-        self._set_extras(games_toolbar)
-
-        self.words_tool_button = button_factory(
-            'word-tools', tools_toolbar, self._edit_words_cb,
-            tooltip=_('Edit word lists.'))
+        if MODE == 'words':
+            self.words_tool_button = button_factory(
+                'word-tools', tools_toolbar, self._edit_words_cb,
+                tooltip=_('Edit word lists.'))
 
         self.import_button = button_factory(
             'image-tools', tools_toolbar, self.image_import_cb,
             tooltip=_('Import custom cards'))
 
         self.button_custom = button_factory(
-            'no-custom-game', tools_toolbar, self._select_game_cb,
-            cb_arg='custom', tooltip=PROMPT_DICT['custom'])
-        '''
+            'new-custom-game', tools_toolbar, self._select_game_cb,
+            cb_arg='custom', tooltip=_('New custom game'))
+        self.button_custom.set_sensitive(False)
 
+        if MODE == 'numbers':
+            self._setup_number_buttons(numbers_toolbar)
+
+    def _setup_number_buttons(self, numbers_toolbar):
         self.product_button = radio_factory(
             'product',
             numbers_toolbar,
@@ -384,7 +380,7 @@ class Dimensions(activity.Activity):
             group=self.product_button)
         NUMBER_O_BUTTONS[INCAN] = self.incan_button
 
-        self._sep.append(separator_factory(numbers_toolbar, False, True))
+        separator_factory(numbers_toolbar, False, True)
 
         self.hash_button = radio_factory(
             'hash',
@@ -539,9 +535,7 @@ class Dimensions(activity.Activity):
         self.vmw.low_score = self._low_score
         self.vmw.all_scores = self._all_scores
         self.vmw.numberO = self._numberO
-        NUMBER_O_BUTTONS[self._numberO].set_active(True)
         self.vmw.numberC = self._numberC
-        NUMBER_C_BUTTONS[self._numberC].set_active(True)
         self.vmw.matches = self._matches
         self.vmw.robot_matches = self._robot_matches
         self.vmw.total_time = self._total_time
@@ -555,6 +549,7 @@ class Dimensions(activity.Activity):
                self._custom_jobject[i] is not None:
                 self.vmw.custom_paths[i] = datastore.get(
                     self._custom_jobject[i])
+                self.button_custom.set_sensitive(True)
         return self._canvas
 
     def write_file(self, file_path):
@@ -674,12 +669,15 @@ class Dimensions(activity.Activity):
         ''' Set up a help palette for the main toolbars '''
         help_box = self._new_help_box('main-toolbar')
         add_section(help_box, _('Dimensions'), icon='activity-dimensions')
-        add_paragraph(help_box, _('Numbers'), icon='number-tools')
-        #add_paragraph(help_box, _('Tools'), icon='view-source')
-        #add_paragraph(help_box, _('Game'), icon='new-pattern-game')
-        add_paragraph(help_box, PROMPT_DICT['number'], icon='new-number-game')
-        # add_paragraph(help_box, PROMPT_DICT['word'], icon='new-word-game')
-        # add_paragraph(help_box, _('Numbers'), icon='number-tools')
+        add_paragraph(help_box, _('Tools'), icon='view-source')
+        if MODE == 'patterns':
+            add_paragraph(help_box, _('Game'), icon='new-pattern-game')
+        elif MODE == 'numbers':
+            add_paragraph(help_box, PROMPT_DICT['number'],
+                          icon='new-number-game')
+            add_paragraph(help_box, _('Numbers'), icon='number-tools')
+        elif MODE == 'words':
+            add_paragraph(help_box, PROMPT_DICT['word'], icon='new-word-game')
         add_paragraph(help_box, _('Play with the computer'), icon='robot-off')
         add_paragraph(help_box, _('robot pause time'), icon='timer-60')
         add_paragraph(help_box, _('beginner'), icon='beginner')
@@ -690,23 +688,25 @@ class Dimensions(activity.Activity):
         add_paragraph(help_box, _('Export scores to clipboard'),
                       icon='score-copy')
 
-        # add_section(help_box, _('Tools'), icon='view-source')
-        # add_section(help_box, _('Import image cards'), icon='image-tools')
-        # add_paragraph(help_box, PROMPT_DICT['custom'], icon='new-custom-game')
-        # add_section(help_box, _('Edit word lists.'), icon='word-tools')
+        add_section(help_box, _('Tools'), icon='view-source')
+        add_section(help_box, _('Import image cards'), icon='image-tools')
+        add_paragraph(help_box, PROMPT_DICT['custom'], icon='new-custom-game')
+        if MODE == 'words':
+            add_section(help_box, _('Edit word lists.'), icon='word-tools')
 
-        add_section(help_box, _('Numbers'), icon='number-tools')
-        add_paragraph(help_box, _('product'), icon='product')
-        add_paragraph(help_box, _('Roman numerals'), icon='roman')
-        add_paragraph(help_box, _('word'), icon='word')
-        add_paragraph(help_box, _('Chinese'), icon='chinese')
-        add_paragraph(help_box, _('Mayan'), icon='mayan')
-        add_paragraph(help_box, _('Quipu'), icon='incan')
-        add_paragraph(help_box, _('hash marks'), icon='hash')
-        add_paragraph(help_box, _('dots in a circle'), icon='dots')
-        add_paragraph(help_box, _('points on a star'), icon='star')
-        add_paragraph(help_box, _('dice'), icon='dice')
-        add_paragraph(help_box, _('dots in a line'), icon='lines')
+        if MODE == 'numbers':
+            add_section(help_box, _('Numbers'), icon='number-tools')
+            add_paragraph(help_box, _('product'), icon='product')
+            add_paragraph(help_box, _('Roman numerals'), icon='roman')
+            add_paragraph(help_box, _('word'), icon='word')
+            add_paragraph(help_box, _('Chinese'), icon='chinese')
+            add_paragraph(help_box, _('Mayan'), icon='mayan')
+            add_paragraph(help_box, _('Quipu'), icon='incan')
+            add_paragraph(help_box, _('hash marks'), icon='hash')
+            add_paragraph(help_box, _('dots in a circle'), icon='dots')
+            add_paragraph(help_box, _('points on a star'), icon='star')
+            add_paragraph(help_box, _('dice'), icon='dice')
+            add_paragraph(help_box, _('dots in a line'), icon='lines')
 
     def _setup_presence_service(self):
         ''' Setup the Presence Service. '''
@@ -739,8 +739,7 @@ class Dimensions(activity.Activity):
             'NewTube', self._new_tube_cb)
 
         _logger.debug('This is my activity: making a tube...')
-        id = self.tubes_chan[telepathy.CHANNEL_TYPE_TUBES].OfferDBusTube(
-            SERVICE, {})
+        self.tubes_chan[telepathy.CHANNEL_TYPE_TUBES].OfferDBusTube(SERVICE, {})
 
     def _joined_cb(self, activity):
         ''' ...or join an exisiting share. '''
